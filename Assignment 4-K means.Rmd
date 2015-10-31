@@ -1,0 +1,108 @@
+---
+title: "Assignment 4-K means"
+author: "Siwei Li"
+date: "October 30, 2015"
+output: pdf_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+Before starting this part, we first load the package fpc so that we can use the plotcluster command to visualize the clustering result afterwards.
+```{r}
+library('fpc')
+```
+
+
+
+K means for the wine data without scaling:
+```{r}
+# Obtain the wine data from the package "rattle"
+data(wine, package="rattle")
+head(wine)
+# Exclude the "Type" variable from the data inputs and assign the others to data.train
+data.train <- wine[-1]
+# Use set seed() so that the clustering results can be reproducible
+set.seed(378)
+# Use k-means method to cluster the wines into 3 groups; the function kmeans() indeed uses Euclidean distance measure by default.
+fit.km <- kmeans(data.train, 3)
+# Visualize the clustering results using plotcluster() from the fpc library
+plotcluster(data.train, fit.km$cluster)
+```
+
+As can be seen from the above plot, there exists some overlaps between clusters, for instance, between cluster 2 and cluster 3. Nevertheless, roughly speaking, the data are indeed separated by the k-means method, though it may not be suitable to say that the data are well-separated.
+
+We can compare the clustering results by k-means and the original classification of the 178 data indicated by the variable "Type":
+```{r}
+# A direct comparison of the clustering results by k-means and the original claasificated indicated by "Type"
+wt.km <- table(wine$Type, fit.km$cluster)
+```
+The above table shows directly that differences between the two indeed exist.
+
+
+
+
+Now we repeat the above exercise using scaled data:
+```{r}
+# Obtain the wine data from the package "rattle"
+data(wine, package="rattle")
+head(wine)
+# Exclude the "Type" variable from the data inputs, center and scale the rest of the data and assign the rest to data.train
+data.train <- scale(wine[-1])
+# Use set seed() so that the clustering results can be reproducible
+set.seed(378)
+# Use k-means method to cluster the wines into 3 groups; the function kmeans() indeed uses Euclidean distance measure by default.
+fit.km <- kmeans(data.train, 3)
+# Visualize the clustering results using plotcluster() from the fpc library
+plotcluster(data.train, fit.km$cluster)
+```
+
+The command, data.train <- scale(wine[-1]), is used for center and scale the wine data excluding the variable Type. More specifically, for each column of wine[-1], first substract the corresponding column mean and then dividing that centered column by its standard deviation. In data.train, each column has a mean of zero.
+
+Using the scaled data, we obtain a better clustering result in the sense that now the clusters seem to be well-separated.
+
+We can compare the clustering results by k-means and the original classification of the 178 data indicated by the variable "Type":
+```{r}
+# A direct comparison of the clustering results by k-means and the original claasificated indicated by "Type"
+wt.km <- table(wine$Type, fit.km$cluster)
+wt.km
+```
+Now the table shows that there is only 6 missing samples.
+
+
+
+
+In the following we show repeat the above exercise for the iris dataset.
+We first use the original dataset which is not scaled.
+```{r}
+# Obtain the iris data
+data(iris)
+head(iris)
+# Exclude the "Species" variable and assign the rest to data.train
+data.train <- iris[-5]
+# Use set seed() so that the clustering results can be reproducible
+set.seed(378)
+# Use k-means method to cluster the data into 3 groups; the function kmeans() indeed uses Euclidean distance measure by default.
+fit.km <- kmeans(data.train, 3)
+# Visualize the clustering results using plotcluster() from the fpc library
+plotcluster(data.train, fit.km$cluster)
+```
+The plot here shows some overlaps between cluster 2 and cluster 3, as a result of which it may not be suitable to say that the k-means works well for clustering this dataset.
+
+
+Now we instead use the scaled iris dataset:
+```{r}
+# Obtain the iris data
+data(iris)
+head(iris)
+# Exclude the "Species" variable and assign the rest to data.train
+data.train <- scale(iris[-5])
+# Use set seed() so that the clustering results can be reproducible
+set.seed(378)
+# Use k-means method to cluster the data into 3 groups; the function kmeans() indeed uses Euclidean distance measure by default.
+fit.km <- kmeans(data.train, 3)
+# Visualize the clustering results using plotcluster() from the fpc library
+plotcluster(data.train, fit.km$cluster)
+```
+As shown in the plot, there are still some overlaps between the cluster 2 and cluster 3, indicating that k-means does not work very well even for this scaled data set. In other words, for the iris dataset, scaling does not help improving the effectiveness of the k-means.
