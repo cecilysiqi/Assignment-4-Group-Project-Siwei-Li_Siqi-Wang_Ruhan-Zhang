@@ -1,13 +1,11 @@
 ---
 title: "Assignment 4-K means"
-author: "Siwei Li"
+author: "Siwei Li Siqi Wang Ruhan Zhang"
 date: "October 30, 2015"
 output: pdf_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-
+Part 3: K means
 
 Before starting this part, we first load two packages: fpc and flexclust. The package fpc will allow us to use the command plotcluster() to visualize the clustering result. The package flexclust will allow us to use the function randIndex() to evaluate the clustering result.
 ```{r}
