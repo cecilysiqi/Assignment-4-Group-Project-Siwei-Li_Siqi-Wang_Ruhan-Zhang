@@ -1,5 +1,5 @@
 ---
-title: "STAT 378 Assignment 4 Gibbs Sampling"
+title: "STAT 378 Assignment 4"
 author: Siwei Li Siqi Wang Ruhan Zhang
 date: October 27, 2015
 header-includes:
@@ -17,6 +17,81 @@ header-includes:
    - \newcommand{\me}{\mathrm{e}}
 output: pdf_document
 ---
+
+Step1: Main Algorithmm for Beta distribution-Metropolis Hasting  
+```{r}
+set.seed(99)
+#prepare for the traceplot in later stages:
+library(coda)
+
+#Metropolis Hasting Procedure:
+Beta_Metropolis <- function(alpha=6,beta=4,c,iterations){
+  chain <- numeric(iterations+1)
+  start_value <- runif(1)
+  chain[1] <- start_value
+  for(i in 1:iterations){
+    current_value <- chain[i]
+    #proposal function:
+    newbeta <- 1
+    while (newbeta == 0 | newbeta == 1) {
+      newbeta <- rbeta(1, c*current_value, c*(1-current_value))
+    }
+    #proposal ratio:
+    proposal_ratio <- dbeta(current_value, c*newbeta, c(1-newbeta)) / dbeta(newbeta, c*current_value, c*(1-current_value))
+    #posterior ratio: 
+    posterior_ratio <- dbeta(newbeta, alpha, beta) / dbeta(current_value, alpha, beta)
+    #acceptance ratio:
+    if(runif(1) < min(1, posterior_ratio * proposal_ratio)){
+      chain[i+1] <- newbeta
+    }else{
+      chain[i+1] <- current_value
+    }
+  }
+  return(chain)
+}
+
+```
+
+Step2: evaluate the performance of the sampler
+```{r}
+chain <- Beta_Metropolis(alpha=6,beta=4,c=1,iterations=10000)
+par(mfrow=c(1,3))  #1 row, 3 columns
+traceplot(as.mcmc(chain)); acf(chain); hist(chain)  #plot commands
+#graphical comparison
+targetbeta <- rbeta(10000,6,4)
+hist(targetbeta)
+#numerical comparison - Kolmogorov–Smirnov statistic
+ks.test(chain,targetbeta)
+```
+
+Step3: re-run the sampler with c=0.1, c=2.5 and c=10
+```{r}
+ccVector <- c(0.1, 2.5, 10)
+  ccChains <- sapply(ccVector, Beta_Metropolis, alpha = 6, beta = 4, iterations = 10000)
+
+  par(mfrow = c(3, 3))
+  for( i in 1:3 ) {
+    ## we plot: (1) trace plot (2) acf (3) a fun histogram
+    plot(ccChains[, i], type="l", main = paste("Trace plot: c = ", ccVector[i], sep=""), xlab="Step", ylab="y")
+    acf(ccChains[, i], main = paste("Acf plot: c = ", ccVector[i], sep=""))
+    hist(ccChains[, i], main = paste("Histogram: c = ", ccVector[i], sep=""), xlab="y")
+  }
+
+
+
+
+par(mfrow=c(3,3)) 
+chain1 <- Beta_Metropolis(alpha=6,beta=4,c=0.1,iterations=10000)
+traceplot(as.mcmc(chain1)); acf(chain1); hist(chain1)
+chain2 <- Beta_Metropolis(alpha=6,beta=4,c=2.5,iterations=10000)
+traceplot(as.mcmc(chain2)); acf(chain2); hist(chain2)
+chain3 <- Beta_Metropolis(alpha=6,beta=4,c=10,iterations=10000)
+traceplot(as.mcmc(chain3)); acf(chain3); hist(chain3)
+```
+
+
+
+
 To sample from the full conditioncal distribution, we need to figure out the full condition density function first. The problem indicates that
 $$
 p(x|y) \propto y\me^{-yx} \quad 0<x<B<\infty
