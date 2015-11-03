@@ -49,8 +49,9 @@ Beta_Metropolis <- function(alpha=6,beta=4,c,iterations){
   }
   return(chain)
 }
-
 ```
+
+
 
 Step2: evaluate the performance of the sampler
 ```{r}
@@ -63,6 +64,9 @@ hist(targetbeta)
 #numerical comparison - Kolmogorov–Smirnov statistic
 ks.test(chain,targetbeta)
 ```
+Using Kolmogorov-Smirnov test, we are trying to test the if our chain follows our target Beta distribution, Beta('alpha'=6, 'beta'=4).
+The null hypothesis of this test states that our chain follows the target Beta distribution. The p-value for this test is 0.04914<0.05 if we are evaluating at 95% significance level. Therefore, we do not reject the null hypothesis. Our metropolis hasting performs quite good in getting samples from the target Beta distribution.
+
 
 Step3: re-run the sampler with c=0.1, c=2.5 and c=10
 ```{r}
