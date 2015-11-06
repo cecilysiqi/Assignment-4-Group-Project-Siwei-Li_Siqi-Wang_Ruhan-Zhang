@@ -211,7 +211,7 @@ mean(sample5000[,1])
 mean(sample50000[,1])
 ```
 
-The mean of the sample with $T=500$ is about 1.33 and the other two means are approximately 1.25 and 1.27. We can see that mean estimates of samples with $T=5000$ and $T=50000$ are much closer. It is a reasonable phenomena since as the iteration number increases, we will get a more accurate approximation from the target distribution. We may guess that the true mean is around 1.27.
+The mean of the sample with $T=500$ is about 1.33 and the other two means are around 1.26. We can see that mean estimates of samples with $T=5000$ and $T=50000$ are much closer. It is a reasonable phenomena since as the iteration number increases, we will get a more accurate approximation from the target distribution. We may guess that the true mean is around 1.26.
 
 
 ###Problem 3. K-Means
