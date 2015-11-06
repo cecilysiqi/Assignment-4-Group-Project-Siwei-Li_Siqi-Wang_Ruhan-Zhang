@@ -107,7 +107,9 @@ chain3 <- Beta_Metropolis(alpha=6,beta=4,c=10,iterations=10000)
 traceplot(as.mcmc(chain3)); acf(chain3); hist(chain3)
 ```
 
-According to the acf plot, the correlation problem solved faster for $c\geqslant 2.5$. The acf is still too large after lag 40 for $c=0.1$. This penomena indicates that the Markov Chain would converge faster as c increases. Thus it is the best to use $c=10$.
+We are comparing the performance of the Metropolis-Hastings algorithm under different c values where c=0.1/2.5/10.  
+Comparing three autocorrelation graphs, we can see that the alogorithm performs the worst under c=0.1 since the autocorrelation is still very high at large lags. When c=0.1, a higher extent of thinning is clearly required, meaning that we should increase the number of burn-in draws. c=10 has a similar issue, though to a lesser degree. It also requires some degrees of thinning, however, the number of burn-in draws in this case should be less than that in c=0.1
+Thus, c=2.5 is most effective at drawing from the target Beta distribution because it has lower autocorrelation at higher lags and its histogram resembles the target Beta histogram the most. 
 
 ###Problem 2. Gibbs Sampling
 
