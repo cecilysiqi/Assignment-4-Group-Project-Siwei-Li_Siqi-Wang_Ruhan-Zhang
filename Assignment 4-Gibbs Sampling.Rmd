@@ -156,7 +156,7 @@ Gibbs.sim <- function(x0,y0,B,Ite){#The inputs are initial values x0, y0, the bo
 
 We do not let the function automatically do the burn-in since we think it is not proper to discard the sampling information easily. Besides, the burn-in process is not difficult to be implemented in this case. Now for $B=5$, we made three samples with sizes $T=500, 5000, 50000$ and plot the histograms. For each sample, we burn-in the first 200 samples. In order to ensure the correct sample amount, we acutually did 700, 5200, 50200 iterations each time.
 ```{r}
-set.seed(930817)
+set.seed(123)
 sample500=Gibbs.sim(1,2,5,700)[-(1:200),] #We burn-in the first 200 samples in order to get 500 samples
 sample5000=Gibbs.sim(1,2,5,5200)[-(1:200),] #Also burn-in the first 200 samples 
 sample50000=Gibbs.sim(1,2,5,50200)[-(1:200),] #50000 samples after burn-in
