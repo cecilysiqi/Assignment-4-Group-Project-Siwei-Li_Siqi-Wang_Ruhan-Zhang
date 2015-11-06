@@ -20,7 +20,26 @@ output: pdf_document
 
 ###Problem 1. Metropolis-Hastings Algorithm
 
-Step1: Main Algorithmm for Beta distribution-Metropolis Hasting  
+Step 1: Main Algorithmm for Beta distribution-Metropolis Hasting
+\newline
+Here is the algorithm scheme:
+\begin{enumerate}
+\item Generate initial value $x_0$ from $Uniform(0,1)$ and set the iteration number $T$ and number $c$.
+\item Set index $t=1$.
+\item Generate random draws $(x_{t})$ where
+      \begin{itemize}
+      \item Generate $x^{*}$ from distribution $Beta(cx_{t-1},c(1-x_{t-1}))$
+      \item Calculate proposal ratio $P_{prop}=\frac{Q(x_{t-1}| x^{*}) }{Q(x^{*}| x_{t-1})}$ where $Q(x_{1}| x_{2})$ follows the distribution $Beta(cx_{2},c(1-x_{2}))$
+      \item Calcaulate posterior ratio $P_{pos}=\frac{f(x^{*})}{f(x_{t-1})}$ where $f$ is the density of $Beta(\alpha,\beta)$
+      \item Calculate acceptance ratio $P=P_{prop}*P_{pos}$
+      \item Generate $u$ from $Uniform(0,1)$
+      \item If $u<min(1,P)$, $x_{t}=x^{*}$; Otherwise $x_{t}=x_{t-1}$ 
+      \end{itemize}
+\item Record sample $x_{t}$
+\item Set $t=t+1$, return to step 3 if $t\leqslant T$.
+\item Return $T$ samples.
+\end{enumerate}
+
 ```{r}
 set.seed(99)
 #prepare for the traceplot in later stages:
@@ -129,8 +148,8 @@ where $0\leqslant u\leqslant 1$. Now, we can list the algorithm scheme:
 \item Generate random draws $(x_{t}, y_{t})$ where
       \begin{itemize}
       \item Generate two numbers $u_1$, $u_2$ from Unif(0,1)
-      \item Let $x_{t}=F_{X|Y}^{(-1)}(u_1|x_{t-1}, y_{t-1})$
-      \item Let $y_{t}=F_{Y|X}^{(-1)}(u_1|x_{t}, y_{t-1})$
+      \item Sample $x_{t}$ from distribution $F_{X|Y}^{(-1)}(u_1|x_{t-1}, y_{t-1})$
+      \item Sample $y_{t}$ from distribution $F_{Y|X}^{(-1)}(u_1|x_{t}, y_{t-1})$
       \end{itemize}
 \item Record sample $(x_{t}, y_{t})$
 \item Set $t=t+1$, return to step 3 if $t\leqslant T$.
