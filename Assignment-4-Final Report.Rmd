@@ -1,7 +1,7 @@
 ---
-title: "STAT 378 Assignment 4"
+title: "STAT 378 Assignment 4 Final Project"
 author: Siwei Li Siqi Wang Ruhan Zhang
-date: October 27, 2015
+date: November 6, 2015
 header-includes:
    - \usepackage{amsmath}
    - \usepackage{setspace}
@@ -18,7 +18,28 @@ header-includes:
 output: pdf_document
 ---
 
-Step1: Main Algorithmm for Beta distribution-Metropolis Hasting  
+###Problem 1. Metropolis-Hastings Algorithm
+
+Step 1: Main Algorithmm for Beta distribution-Metropolis Hasting
+\newline
+Here is the algorithm scheme:
+\begin{enumerate}
+\item Generate initial value $x_0$ from $Uniform(0,1)$ and set the iteration number $T$ and number $c$.
+\item Set index $t=1$.
+\item Generate random draws $(x_{t})$ where
+      \begin{itemize}
+      \item Generate $x^{*}$ from distribution $Beta(cx_{t-1},c(1-x_{t-1}))$
+      \item Calculate proposal ratio $P_{prop}=\frac{Q(x_{t-1}| x^{*}) }{Q(x^{*}| x_{t-1})}$ where $Q(x_{1}| x_{2})$ follows the distribution $Beta(cx_{2},c(1-x_{2}))$
+      \item Calcaulate posterior ratio $P_{pos}=\frac{f(x^{*})}{f(x_{t-1})}$ where $f$ is the density of $Beta(\alpha,\beta)$
+      \item Calculate acceptance ratio $P=P_{prop}*P_{pos}$
+      \item Generate $u$ from $Uniform(0,1)$
+      \item If $u<min(1,P)$, $x_{t}=x^{*}$; Otherwise $x_{t}=x_{t-1}$ 
+      \end{itemize}
+\item Record sample $x_{t}$
+\item Set $t=t+1$, return to step 3 if $t\leqslant T$.
+\item Return $T$ samples.
+\end{enumerate}
+
 ```{r}
 set.seed(99)
 #prepare for the traceplot in later stages:
@@ -53,7 +74,7 @@ Beta_Metropolis <- function(alpha=6,beta=4,c,iterations){
 
 
 
-Step2: evaluate the performance of the sampler
+Step2: Evaluate the performance of the sampler
 ```{r}
 chain <- Beta_Metropolis(alpha=6,beta=4,c=1,iterations=10000)
 par(mfrow=c(1,3))  #1 row, 3 columns
@@ -64,7 +85,14 @@ hist(targetbeta)
 #numerical comparison - Kolmogorov–Smirnov statistic
 ks.test(chain,targetbeta)
 ```
-Using Kolmogorov-Smirnov test, we are trying to test the if our chain follows our target Beta distribution, Beta('alpha'=6, 'beta'=4).
+
+The traceplot shows the value of $x_t$ changes all the time. It indicates that we are actually sampling data with different x-values which implies that our algorithm is making valid approximation.
+\newline
+The autocorrelation plot shows that after a certain number of iterations, the sample will not be affected by the correlation problem, which is a good sign since our aim is to get approximate samples from the target distribution.
+\newline
+The histogram shows the shape of the sample distribution. It seems like a shape from the corresponding beta distribution.
+\newline
+Using Kolmogorov-Smirnov test, we are trying to test that if our chain follows our target Beta distribution, $Beta(\alpha=6, \beta=4)$.
 The null hypothesis of this test states that our chain follows the target Beta distribution. The p-value for this test is 0.04914<0.05 if we are evaluating at 95% significance level. Therefore, we do not reject the null hypothesis. Our metropolis hasting performs quite good in getting samples from the target Beta distribution.
 
 
@@ -79,11 +107,11 @@ chain3 <- Beta_Metropolis(alpha=6,beta=4,c=10,iterations=10000)
 traceplot(as.mcmc(chain3)); acf(chain3); hist(chain3)
 ```
 
+According to the acf plot, the correlation problem solved faster for $c\geqslant 2.5$. The acf is still too large after lag 40 for $c=0.1$. This penomena indicates that the Markov Chain would converge faster as c increases. Thus it is the best to use $c=10$.
 
+###Problem 2. Gibbs Sampling
 
-
-
-To sample from the full conditioncal distribution, we need to figure out the full condition density function first. The problem indicates that
+To sample from the full conditional distribution, we need to figure out the full conditional density function first. The problem indicates that
 $$
 p(x|y) \propto y\me^{-yx} \quad 0<x<B<\infty
 $$
@@ -127,8 +155,8 @@ where $0\leqslant u\leqslant 1$. Now, we can list the algorithm scheme:
 \item Generate random draws $(x_{t}, y_{t})$ where
       \begin{itemize}
       \item Generate two numbers $u_1$, $u_2$ from Unif(0,1)
-      \item Let $x_{t}=F_{X|Y}^{(-1)}(u_1|x_{t-1}, y_{t-1})$
-      \item Let $y_{t}=F_{Y|X}^{(-1)}(u_1|x_{t}, y_{t-1})$
+      \item Sample $x_{t}$ from distribution $F_{X|Y}^{(-1)}(u_1|x_{t-1}, y_{t-1})$
+      \item Sample $y_{t}$ from distribution $F_{Y|X}^{(-1)}(u_1|x_{t}, y_{t-1})$
       \end{itemize}
 \item Record sample $(x_{t}, y_{t})$
 \item Set $t=t+1$, return to step 3 if $t\leqslant T$.
@@ -172,8 +200,8 @@ hist(sample5000[,1],xlab="x", main="5000 Samples by Gibbs Sampling")
 hist(sample50000[,1],xlab="x", main="50000 Samples by Gibbs Sampling")
 ```
 
-We can see that all the histograms are skewed to the right. The shape of each plot is similar. \\
-
+We can see that all the histograms are skewed to the right. The shape of each plot is similar. 
+\newline
 By Gibbs sampling, once the Markov Chain contructed by the algorithm converges to the target distribution which we want to find, we can treat samples as approximates from the target distribution. Thus we can use the mean of samples of $x$ to estimate $E_{p(X)}[X]$. Here are the estimates from three sizes samples:
 ```{r}
 mean(sample500[,1])
@@ -181,10 +209,10 @@ mean(sample5000[,1])
 mean(sample50000[,1])
 ```
 
-The mean of the sample with $T=500$ is about 1.07 and the other two means are approximately 1.25 and 1.27. We can see that mean estimates of samples with $T=5000$ and $T=50000$ are much closer. It is a reasonable phenomena since as the iteration number increases, we will get a more accurate approximation from the target distribution. It indicates that we may get a good estimate of $E_{p(X)}[X]$ from samples with $T>5000$.
+The mean of the sample with $T=500$ is about 1.33 and the other two means are approximately 1.25 and 1.27. We can see that mean estimates of samples with $T=5000$ and $T=50000$ are much closer. It is a reasonable phenomena since as the iteration number increases, we will get a more accurate approximation from the target distribution. We may guess that the true mean is around 1.27.
 
 
-Part 3: K means
+###Problem 3. K-Means
 
 Before starting this part, we first load two packages: fpc and flexclust. The package fpc will allow us to use the command plotcluster() to visualize the clustering result. The package flexclust will allow us to use the function randIndex() to evaluate the clustering result.
 ```{r}
