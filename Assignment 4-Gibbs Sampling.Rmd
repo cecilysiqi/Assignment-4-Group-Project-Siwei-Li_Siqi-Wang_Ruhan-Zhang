@@ -192,8 +192,15 @@ library('fpc')
 library('flexclust')
 ```
 
-Instead of using the built-in function kmeans() directly, we try to write the K means algorithm by ourselves. The function is called clusterByKmeans() with two parameter inputs: the data set and the number of groups.
+Instead of using the built-in function kmeans() directly, we try to write a R function for K means algorithm. The function is called clusterByKmeans() with two parameters: the data set and the number of groups. We closely follow the K-means algorithm to write this function. The logic of the algorithm as well as the function clusterByKmeans() is as follows. 
 
+Suppose we want to cluster all the data points into k groups.
+Step 1: Randomly pick k data points as the initial centers (means) of the k groups.
+Step 2: Assign each data point to the group whose center is closest to to this data point in terms of Euclidean distance. Each point is assigned to only one group. This step will then gives k groups of data points.
+Step 3: Calculate the new centers (means) of the k groups and update the values of the centers (means) of the k groups.
+Step 4: Repeat Step 2 and Step 3, until the assignment of all data points does not change any more.
+
+The code of the function clusterByKmeans is given below:
 ```{r}
 clusterByKmeans <- function(dataset, groupNo){
 	
@@ -201,8 +208,8 @@ clusterByKmeans <- function(dataset, groupNo){
 rowNo <- nrow(dataset)
 colNo <- ncol(dataset)
 
-# Create a vector g to store the clustering result 
-# (indicating which point belongs to which group)
+# Create a vector to store the clustering result 
+# (indicating which point belongs to which cluster)
 cluster <- vector("numeric", length=rowNo)
 
 # Create a vector to store the distance between each data point 
@@ -210,9 +217,11 @@ cluster <- vector("numeric", length=rowNo)
 dtc <- vector("numeric", length=rowNo)
 
 # Create a matrix to store the centers of the groups
+# Use a matrix because each center is a row vector
 center <- matrix(0,nrow=groupNo,ncol=colNo)
 
-# Randomly select 3 points (rows of data.train) as the initial centers of the 3 groups
+# Randomly select groupNo points (rows of dataset)
+# as the initial centers of the groupNo groups
 randomInt <- as.vector(sample(1:rowNo,size=groupNo))
 for (i in 1:groupNo){
 	center[i,] <- dataset[randomInt[i],]
@@ -241,7 +250,7 @@ changed <- TRUE
 
 # If the assignment is changed in a iteration, we continue; 
 # if the assignment no longer changes, we stop.
-while(changed){
+while(changed==TRUE){
 
 initialCluster <- cluster
 
@@ -249,7 +258,8 @@ for (i in 1:rowNo){
 	initialdtc <- dtc[i]
 	preCluster <- cluster[i]
 	
-	# We shall find a better cluster solution for the point i.
+	# We shall find a better cluster solution for the point i
+	# in terms of smaller Euclidean distance.
 	for (j in 1:groupNo){
 		# Compute the distance between the point i and the center of the cluster j
 		currentdtc <- sqrt(sum((dataset[i,]-center[j,])^2))
@@ -280,14 +290,15 @@ for (k in 1:groupNo){
 		pointsIn <- dataset[cluster==k,]
 		pointsMat <- as.matrix(pointsIn)
 		# If there is at least one points in the cluster k, we update the center 
-		# of the cluster k; otherwise, the center remains unchanged.
+		## of the cluster k; otherwise, the center remains unchanged.
 		if (nrow(pointsMat)>0){
 			center[k,] <- colMeans(pointsMat)
 		}else{
 			center[k,] <- center[k,]
 		}	
-	  }
+	 }
  }
+# return the clustering result
 return(cluster)	
 }
 ```
@@ -300,17 +311,17 @@ K means for the wine data without scaling:
 data(wine, package="rattle")
 head(wine)
 # Exclude the "Type" variable from the data inputs
-# Assign the others to data.train
+# and assign the others to data.train
 data.train <- wine[-1]
 # Use set seed() so that the clustering results can be reproducible
-set.seed(37810)
+set.seed(2475)
 # Use k-means method to cluster the wines into 3 groups
 fit.km <- clusterByKmeans(data.train,3)
 # Visualize the clustering results using plotcluster() from the fpc library
 plotcluster(data.train, fit.km)
 ```
 
-As can be seen from the above plot, there exist lots of overlaps between clusters, for instance, between cluster 2 and cluster 3. It is not suitable to say that the data are well-separated.
+As can be seen from the above plot, there exist some overlaps between clusters, for instance, between cluster 1 and cluster 2. The data points are indeed separated by the K means but it may not be very suitable to say that the data are well-separated.
 
 We can compare the clustering results by k-means and the original classification of the 178 data indicated by the variable "Type":
 ```{r}
@@ -319,11 +330,10 @@ We can compare the clustering results by k-means and the original classification
 wt.km <- table(wine$Type, fit.km)
 wt.km
 # Calculate the adjusted rand index, which is used for 
-# quantifying to what extent the two ways of clustering agree with each other.
+## quantifying to what extent the two ways of clustering agree with each other.
 randIndex(wt.km)
 ```
-The above table shows directly that differences between the two indeed exist. The value of the adjusted rand index is 0.1984624, which is not quite close to 1. Note that the adjusted rand index which is a measure of the degree of agreement between two partitions takes values between -1 (no agreement) and 1 (perfect agreement). Hence, the partition obtained by K means does not match the original types of the wine very well.
-
+The above table shows directly that differences between the two partitions indeed exist. The value of the adjusted rand index is 0.3986227, which is not close to 1. Note that the adjusted rand index which is a measure of the degree of agreement between two partitions takes values between -1 (implying no agreement) and 1 (implying perfect agreement). Hence, we conclude that the partition obtained by K means does not match the original types of the wine well.
 
 
 
@@ -336,26 +346,27 @@ head(wine)
 # center and scale the rest of the data and assign the rest to data.train
 data.train <- scale(wine[-1])
 # Use set seed() so that the clustering results can be reproducible.
-# set.seed(37810)
+set.seed(2475)
 # Use k-means method to cluster the wines into 3 groups 
 fit.km <- clusterByKmeans(data.train,3)
 # Visualize the clustering results using plotcluster() from the fpc library
 plotcluster(data.train, fit.km)
 ```
 
-The command, data.train <- scale(wine[-1]), is used for center and scale the wine data excluding the variable Type. More specifically, for each column of wine[-1], first substract the corresponding column mean and then dividing that centered column by its standard deviation. In data.train, each column has a mean of zero.
+The command, data.train <- scale(wine[-1]), is used for center and scale the wine data excluding the variable Type. More specifically, for each column of wine[-1], first substract the corresponding column mean and then dividing that centered column by its standard deviation. In the data.train here, each column has a mean of zero.
 
-Using the scaled data, we obtain a better clustering result in the sense that now the clusters seem to be well-separated, despite a minor overlap between cluster 1 and cluster 3.
+Using the scaled data, we obtain a clustering result which looks better than what we obtained in the unscaled case, though minor overlaps still exist.
 
-We can compare the clustering results by k-means and the original classification of the 178 data indicated by the variable "Type":
+We then compare the clustering results by k-means and the original classification of the 178 data indicated by the variable "Type":
 ```{r}
 # A comparison of the clustering results by k-means 
 # and the original claassification indicated by "Type"
 wt.km <- table(wine$Type, fit.km)
 wt.km
+# Calculate the adjusted rand index
 randIndex(wt.km)
 ```
-Now the table shows that there are fewer missing samples than in the unscaled case. The value of the adjusted rand index is 0.6873931, which is much larger than in the unscaled case. Hence, scaling helps improve the performance of K means in the sense that after scaling the clustering result using K means is more similar to the original classification.
+Now the table shows that there are fewer missing samples than in the unscaled case. The value of the adjusted rand index is 0.7423375, which is much larger than in the unscaled case. Hence, scaling helps improve the performance of K means in the sense that after scaling the clustering result using K means is more similar to the original partition.
 
 
 In the following we show repeat the above exercise for the iris dataset.
@@ -367,21 +378,21 @@ head(iris)
 # Exclude the "Species" variable and assign the rest to data.train
 data.train <- iris[-5]
 # Use set seed() so that the clustering results can be reproducible
-set.seed(37810)
+set.seed(3000)
 # Use k-means method to cluster the data into 3 groups 
 fit.km <- clusterByKmeans(data.train,3)
 # Visualize the clustering results using plotcluster() from the fpc library
 plotcluster(data.train, fit.km)
 ```
-The plot here shows some overlaps, in particular between cluster 1 and cluster 2 and between cluster 1 and cluster 3, as a result of which k-means does not work very well for clustering this dataset.
+The plot here shows some overlaps between clusters, for instance, between cluster 1 and cluster 3 as well as between cluster 1 and cluster 2. It seems that K means does not separate the data points very well in this case. 
 
-We can compare the clustering results by k-means and the original classification of the data indicated by the variable "species":
+Now we compare the clustering results by k-means and the original classification of the data indicated by the variable "species":
 ```{r}
 fs.km <- table(iris$Species,fit.km)
 fs.km
 randIndex(fs.km)
 ```
-The adjusted rand index here is 0.4305639, which is not quite close to 1. So the algorithm's clusters do not match the original partition very well.
+The adjusted rand index here is 0.3609973, which is not close to 1. So the algorithm's clusters do not match the original partition very well.
 
 
 Now we instead use the scaled iris dataset:
@@ -392,13 +403,13 @@ head(iris)
 # Exclude the "Species" variable and assign the rest to data.train
 data.train <- scale(iris[-5])
 # Use set seed() so that the clustering results can be reproducible
-set.seed(37810)
+set.seed(3000)
 # Use k-means method to cluster the data into 3 groups
 fit.km <- clusterByKmeans(data.train,3)
 # Visualize the clustering results using plotcluster() from the fpc library
 plotcluster(data.train, fit.km)
 ```
-As shown in the plot, there are still some overlaps between clusters, indicating that k-means does not work very well even for this scaled data set. 
+As shown in the plot, there are still some overlaps clusters, for instance, between cluster 1 and cluster 2 as well as between cluster 1 and cluster 3. K-means here still cannot separate the data points very well.
 
 To quantify the comparison, we can still apply randIndex()
 ```{r}
@@ -406,7 +417,10 @@ fs.km <- table(iris$Species,fit.km)
 fs.km
 randIndex(fs.km)
 ```
-The adjusted rand index now is 0.3910336, which is even a little bit smaller than the unscaled case. In other words, for the iris dataset, scaling does not help improving the effectiveness of the k-means.
+The adjusted rand index now is 0.3510718, which is even smaller than the unscaled case. In other words, for the iris dataset, scaling does not help improving the effectiveness of the k-means and K-means method in this case works better for the unscaled case.
 
 
-As a summary, scaling is useful for improving the performance of K means for the wine data but not for the iris data.
+As a summary, scaling is useful for improving the performance of K means for the wine data but not for the iris data. 
+
+
+Remark: when performing the K-means algorithm, we observe that the performance of this algorithm depends on the initial choice of group centers. Nevertheless, we choose the set seeds in this part so as to make the output reproducible.
